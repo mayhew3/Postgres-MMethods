@@ -12,16 +12,16 @@ exports.executeQueryWithResults = function(response, sql, values) {
         done();
 
         if (err) {
-          console.error(err);
-          response.send("Query error " + err);
+          console.error(err.message);
+          response.send("Query error " + err.message);
         } else {
           return response.json(res.rows);
         }
       });
 
       if (err) {
-        console.error(err);
-        response.send("Connection error " + err);
+        console.error(err.message);
+        response.send("Connection error " + err.message);
       }
 
     });
@@ -40,16 +40,16 @@ exports.executeQueryNoResults = function(response, sql, values) {
         done();
 
         if (err) {
-          console.error(err);
-          response.send("Query error " + err);
+          console.error(err.message);
+          response.send("Query error " + err.message);
         } else {
           return response.json({msg: "Success"});
         }
       });
 
       if (err) {
-        console.error(err);
-        response.send("Connection error " + err);
+        console.error(err.message);
+        response.send("Connection error " + err.message);
       }
 
     });
@@ -68,16 +68,16 @@ exports.updateNoJSON = function(sql, values) {
           done();
 
           if (err) {
-            console.error(err);
-            reject(Error("Query error " + err));
+            console.error(err.message);
+            reject(err);
           } else {
             resolve("Success!");
           }
         });
 
         if (err) {
-          console.error(err);
-          reject(Error("Connection error " + err));
+          console.error(err.message);
+          reject(err);
         }
 
       });
@@ -98,9 +98,9 @@ exports.selectWithJSON = function(sql, values) {
           done();
 
           if (err) {
-            console.error(err);
+            console.error(err.message);
             pool.end();
-            reject(Error("Query error " + err));
+            reject(err);
           } else {
             pool.end();
             resolve(res.rows);
@@ -108,9 +108,9 @@ exports.selectWithJSON = function(sql, values) {
         });
 
         if (err) {
-          console.error(err);
+          console.error(err.message);
           pool.end();
-          reject(Error("Connection error " + err));
+          reject(err);
         }
 
       });
