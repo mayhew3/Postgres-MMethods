@@ -1,7 +1,7 @@
 {
   "name": "postgres-mmethods",
   "description": "Convenience methods for the pg library",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "private": false,
   "main": "index.js",
   "dependencies": {

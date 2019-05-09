@@ -1,18 +1,18 @@
 const pg = require('pg');
 const config = process.env.DATABASE_URL;
 
-exports.executeQueryWithResults = function(response, sql, values) {
+const pool = new pg.Pool({
+  connectionString: config
+});
 
-    const pool = new pg.Pool({
-      connectionString: config
-    });
+exports.selectSendResponse = function(response, sql, values) {
 
     pool.connect(function(err, client, done) {
       client.query(sql, values, function(err, res) {
         done();
 
         if (err) {
-          console.error(err.message);
+          console.error(err.message, err.stack);
           response.send("Query error " + err.message);
         } else {
           return response.json(res.rows);
@@ -20,27 +20,22 @@ exports.executeQueryWithResults = function(response, sql, values) {
       });
 
       if (err) {
-        console.error(err.message);
+        console.error(err.message, err.stack);
         response.send("Connection error " + err.message);
       }
 
     });
 
-    pool.end();
   };
 
-exports.executeQueryNoResults = function(response, sql, values) {
-
-    const pool = new pg.Pool({
-      connectionString: config
-    });
+exports.updateSendResponse = function(response, sql, values) {
 
     pool.connect(function(err, client, done) {
       client.query(sql, values, function(err) {
         done();
 
         if (err) {
-          console.error(err.message);
+          console.error(err.message, err.stack);
           response.send("Query error " + err.message);
         } else {
           return response.json({msg: "Success"});
@@ -48,76 +43,49 @@ exports.executeQueryNoResults = function(response, sql, values) {
       });
 
       if (err) {
-        console.error(err.message);
+        console.error(err.message, err.stack);
         response.send("Connection error " + err.message);
       }
 
     });
 
-    pool.end();
   };
 
-exports.updateNoJSON = function(sql, values) {
+exports.updateNoResponse = function(sql, values) {
     return new Promise(function(resolve, reject) {
-      const pool = new pg.Pool({
-        connectionString: config
-      });
-
-      pool.connect(function(err, client, done) {
-        client.query(sql, values, function(err) {
-          done();
-
-          if (err) {
-            console.error(err.message);
-            reject(err);
-          } else {
-            resolve("Success!");
-          }
-        });
-
+      pool.connect(function(err, client, release) {
         if (err) {
-          console.error(err.message);
           reject(err);
+        } else {
+          client.query(sql, values, function(err) {
+            release();
+            if (err) {
+              reject(err);
+            } else {
+              resolve("Success!");
+            }
+          });
         }
-
       });
-
-      pool.end();
     });
-
   };
 
-exports.selectWithJSON = function(sql, values) {
+exports.selectNoResponse = function(sql, values) {
     return new Promise(function (resolve, reject) {
-      const pool = new pg.Pool({
-        connectionString: config
-      });
-
-      pool.connect(function (err, client, done) {
+      pool.connect(function (err, client, release) {
         if (err) {
           reject(err);
+        } else {
+          client.query(sql, values, function (err, results) {
+            release();
+            if (err) {
+              reject(err);
+            } else {
+              resolve(results.rows);
+            }
+          });
         }
-        client.query(sql, values, function (err, res) {
-          done();
-
-          if (err) {
-            console.error(err.message);
-            pool.end();
-            reject(err);
-          } else {
-            pool.end();
-            resolve(res.rows);
-          }
-        });
-
-        if (err) {
-          console.error(err.message);
-          pool.end();
-          reject(err);
-        }
-
       });
-
     });
   };
 
@@ -196,7 +164,7 @@ exports.buildUpdateQueryConfigNoID = function(changedFields, tableName, identify
     };
   };
 
-exports.updateObjectWithChangedFields = function(response, changedFields, tableName, rowID) {
+exports.updateObjectWithChangedFieldsSendResponse = function(response, changedFields, tableName, rowID) {
     console.log("Update " + tableName + " with " + JSON.stringify(changedFields));
 
     const queryConfig = this.buildUpdateQueryConfig(changedFields, tableName, rowID);
@@ -204,10 +172,10 @@ exports.updateObjectWithChangedFields = function(response, changedFields, tableN
     console.log("SQL: " + queryConfig.text);
     console.log("Values: " + queryConfig.values);
 
-    return this.executeQueryNoResults(response, queryConfig.text, queryConfig.values);
+    return this.updateSendResponse(response, queryConfig.text, queryConfig.values);
   };
 
-exports.updateObjectWithChangedFieldsNoJSON = function(changedFields, tableName, rowID) {
+exports.updateObjectWithChangedFieldsNoResponse = function(changedFields, tableName, rowID) {
     console.log("Update " + tableName + " with " + JSON.stringify(changedFields));
 
     const queryConfig = this.buildUpdateQueryConfig(changedFields, tableName, rowID);
@@ -215,7 +183,7 @@ exports.updateObjectWithChangedFieldsNoJSON = function(changedFields, tableName,
     console.log("SQL: " + queryConfig.text);
     console.log("Values: " + queryConfig.values);
 
-    return this.updateNoJSON(queryConfig.text, queryConfig.values);
+    return this.updateNoResponse(queryConfig.text, queryConfig.values);
   };
 
 exports.createInlineVariableList = function(arrSize, starting) {
