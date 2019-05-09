@@ -94,6 +94,9 @@ exports.selectWithJSON = function(sql, values) {
       });
 
       pool.connect(function (err, client, done) {
+        if (err) {
+          reject(err);
+        }
         client.query(sql, values, function (err, res) {
           done();
 
