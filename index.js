@@ -8,22 +8,22 @@ const pool = new pg.Pool({
 exports.selectSendResponse = function(response, sql, values) {
 
     pool.connect(function(err, client, done) {
-      client.query(sql, values, function(err, res) {
-        done();
-
-        if (err) {
-          console.error(err.message, err.stack);
-          response.send("Query error " + err.message);
-        } else {
-          return response.json(res.rows);
-        }
-      });
-
       if (err) {
         console.error(err.message, err.stack);
         response.send("Connection error " + err.message);
-      }
+      } else {
 
+        client.query(sql, values, function (err, res) {
+          done();
+
+          if (err) {
+            console.error(err.message, err.stack);
+            response.send("Query error " + err.message);
+          } else {
+            return response.json(res.rows);
+          }
+        });
+      }
     });
 
   };
@@ -31,20 +31,22 @@ exports.selectSendResponse = function(response, sql, values) {
 exports.updateSendResponse = function(response, sql, values) {
 
     pool.connect(function(err, client, done) {
-      client.query(sql, values, function(err) {
-        done();
-
-        if (err) {
-          console.error(err.message, err.stack);
-          response.send("Query error " + err.message);
-        } else {
-          return response.json({msg: "Success"});
-        }
-      });
 
       if (err) {
         console.error(err.message, err.stack);
         response.send("Connection error " + err.message);
+      } else {
+
+        client.query(sql, values, function (err) {
+          done();
+
+          if (err) {
+            console.error(err.message, err.stack);
+            response.send("Query error " + err.message);
+          } else {
+            return response.json({msg: "Success"});
+          }
+        });
       }
 
     });
