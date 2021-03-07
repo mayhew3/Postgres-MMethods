@@ -1,8 +1,11 @@
 const pg = require('pg');
-const config = process.env.DATABASE_URL;
+const databaseURL = process.env.DATABASE_URL;
 
 const pool = new pg.Pool({
-  connectionString: config
+  connectionString: databaseURL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 exports.selectSendResponse = function(response, sql, values) {
