@@ -7,15 +7,17 @@ const envName = process.env.envName;
 assert(!!databaseURL, "No environment variable: DATABASE_URL");
 assert(!!envName, "No environment variable: envName");
 
-const pool = new pg.Pool({
+let options = {
   connectionString: databaseURL
-});
+};
 
 if (envName.includes('heroku')) {
-  pool.ssl = {
+  options.ssl = {
     rejectUnauthorized: false
   }
 }
+
+const pool = new pg.Pool(options);
 
 exports.selectSendResponse = function(response, sql, values) {
 
